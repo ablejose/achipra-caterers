@@ -7,7 +7,7 @@ import crypto from 'node:crypto';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
-import { seedRecords } from './seed.mjs';
+import { seedRecords, demoRecords, copyDemoPhotos, SEED_VERSION } from './seed.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(ROOT, 'public');
@@ -67,9 +67,28 @@ function tx(fn) {
   catch (e) { db.exec('ROLLBACK'); throw e; }
 }
 
-if (!meta('seeded') && q.count.get().n === 0) {
-  tx(() => { for (const r of seedRecords()) writeRec(r.coll, r.id, r.data); setMeta('seeded', '1'); });
-  console.log('Loaded default items, dishes and menus.');
+if (q.count.get().n === 0) {
+  // Brand new: Achipra's sheet items, the two Sadhya menus, and a demo order to look around.
+  tx(() => {
+    for (const r of [...seedRecords(), ...demoRecords()]) writeRec(r.coll, r.id, r.data);
+    setMeta('seeded', '1'); setMeta('seedVersion', SEED_VERSION);
+  });
+  copyDemoPhotos(ROOT, UPLOADS);
+  console.log('Loaded default items, Sadhya menus and a demo order.');
+} else if (meta('seeded') && Number(meta('seedVersion') || 1) < SEED_VERSION) {
+  // Made by an older version: swap its generic defaults for Achipra's lists (once).
+  const keep = new Set(seedRecords().map((r) => r.coll + '/' + r.id));
+  tx(() => {
+    for (const r of db.prepare("SELECT coll, id FROM records WHERE coll IN ('items','dishes','menus') AND deleted = 0").all()) {
+      if (!keep.has(r.coll + '/' + r.id)) writeRec(r.coll, r.id, null, 1);
+    }
+    for (const r of seedRecords()) writeRec(r.coll, r.id, r.data);
+    const hasDemo = db.prepare("SELECT 1 FROM records WHERE coll = 'orders' AND id LIKE 'demo-%' AND deleted = 0").get();
+    if (!hasDemo) for (const r of demoRecords()) writeRec(r.coll, r.id, r.data);
+    setMeta('seedVersion', SEED_VERSION);
+  });
+  copyDemoPhotos(ROOT, UPLOADS);
+  console.log('Updated to Achipra purchase-sheet items and Sadhya menus.');
 }
 
 // ---------- auth ----------

@@ -1,7 +1,7 @@
 // Settings: food types (menus), dishes and their recipes, things to buy, people, password, backup.
 import { A, esc, rs, fq, num, icon, toast, openSheet, closeSheet, sheetHead, ask, field } from './ui.js';
-import { get, list, put, removeMany, me, personName, settings, apiJson, sync, people } from './store.js';
-import { allGroups, groupRank, UNITS } from './calc.js';
+import { get, list, put, removeMany, me, setMe, personName, settings, apiJson, sync, people } from './store.js';
+import { allGroups, groupRank, UNITS, GROUP_ML, itemOrder } from './calc.js';
 import { render, TEXT_SIZES, applyTextSize } from './app.js';
 
 const back = (href, label) => `<a class="back" href="${href}">${icon('back')} ${label}</a>`;
@@ -17,6 +17,11 @@ export function settingsView() {
     html: `
     <div class="page">
       <div class="page-head"><h1>Settings</h1></div>
+      ${demoCount() ? `<section class="card pad">
+        <h3>Demo order is in the app</h3>
+        <p class="hint">Two sample orders (names start with DEMO) with buyers Unni, Suresh and Prakash, bills and advances. They show how everything works. Remove them before real use.</p>
+        <button class="btn block" data-act="removeDemo">${icon('trash')} Remove demo orders and names</button>
+      </section>` : ''}
 
       <section class="card">
         <h3 class="card-title">This phone</h3>
@@ -57,6 +62,19 @@ export function settingsView() {
     },
   };
 }
+
+const DEMO_COLLS = ['orders', 'lines', 'bills', 'payments', 'people'];
+const demoRecs = () => DEMO_COLLS.flatMap((c) => list(c).filter((r) => r.demo).map((r) => [c, r.id]));
+const demoCount = () => list('orders').filter((o) => o.demo).length;
+A.removeDemo = async () => {
+  if (!(await ask('Remove the demo orders?', { ok: 'Yes, remove demo', danger: true, detail: 'The two DEMO orders, their lists, bills and advances, and the demo buyers Unni, Suresh and Prakash are removed. Your own orders are not touched.' }))) return;
+  const recs = demoRecs();
+  // Keep a demo name if a real order already uses it.
+  const used = new Set([...list('bills'), ...list('payments')].filter((r) => !r.demo).map((r) => r.person));
+  removeMany(recs.filter(([c, id]) => c !== 'people' || !used.has(id)));
+  if (recs.some(([c, id]) => c === 'people' && id === me())) setMe('');
+  toast('Demo removed', 'ok');
+};
 
 A.textSize = (el) => { applyTextSize(el.dataset.v); render(); };
 A.logout = async () => {
@@ -198,7 +216,7 @@ function dishesList() {
 }
 
 function itemOptions(selected) {
-  const items = list('items').sort((a, b) => groupRank(a.group) - groupRank(b.group) || a.name.localeCompare(b.name));
+  const items = list('items').sort(itemOrder);
   const groups = [...new Set(items.map((i) => i.group || 'Others'))];
   return `<option value="">Choose…</option>` + groups.map((g) => `<optgroup label="${esc(g)}">${items.filter((i) => (i.group || 'Others') === g).map((i) => `<option value="${esc(i.id)}" data-unit="${esc(i.unit)}" ${i.id === selected ? 'selected' : ''}>${esc(i.name)}</option>`).join('')}</optgroup>`).join('');
 }
@@ -265,7 +283,7 @@ function dishEdit(id) {
 }
 
 function itemsList() {
-  const items = list('items').sort(byName);
+  const items = list('items').sort(itemOrder);
   const groups = [...new Set(items.map((i) => i.group || 'Others'))].sort((a, b) => groupRank(a) - groupRank(b));
   return {
     html: `<div class="page">${back('#/settings', 'Settings')}
@@ -273,7 +291,7 @@ function itemsList() {
       <p class="hint">The rate is only for the cost estimate. Change it when prices change.</p>
       <a class="btn big primary block" href="#/settings/item/new">${icon('plus')} New thing</a>
       ${searchBox('Find, e.g. coconut')}
-      ${groups.map((g) => `<section class="group"><h3 class="list-title">${esc(g)}</h3><div class="rows card">
+      ${groups.map((g) => `<section class="group"><h3 class="list-title">${esc(g)}${GROUP_ML[g] ? ` <span class="ml">${GROUP_ML[g]}</span>` : ''}</h3><div class="rows card">
         ${items.filter((i) => (i.group || 'Others') === g).map((i) => `<a class="set-row" href="#/settings/item/${esc(i.id)}" data-s="${esc((i.name + ' ' + (i.ml || '')).toLowerCase())}"><span><b>${esc(i.name)}</b><small class="muted">${i.ml ? esc(i.ml) + ' · ' : ''}${esc(i.unit)}${i.rate ? ` · ${rs(i.rate)}/${esc(i.unit)}` : ''}</small></span>${icon('chevron', 'chev')}</a>`).join('')}
       </div></section>`).join('')}
     </div>`,

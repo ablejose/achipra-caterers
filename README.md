@@ -18,9 +18,15 @@ Keep the black window open while people are using the app.
 Everything is in the `data` folder: `achipra.db` (all orders, lists, bills, money) and `data/uploads` (bill photos).
 Copy that folder to keep a backup, or use **Settings → Download backup**.
 
+## Demo order
+
+A new install comes with two DEMO orders (a 600-plate wedding Sadhya half bought, and a finished housewarming), buyers Unni, Suresh and Prakash, bill photos and advances. Every screen then has something to show. Remove them in **Settings → Remove demo orders and names** before real use.
+
 ## How it works
 
-- **Settings → Food types**: Sadhya (Full), Sadhya (Mini), Chicken Biriyani, Breakfast, Tea & Snacks. Each is a set of dishes.
+- **Things to buy** are the items on Achipra's printed purchase sheets, in the same order and sections: Grocery (പലചരക്ക്), Vegetables (പച്ചക്കറി), Miscellaneous (പലവക) and Vessels (പാത്രങ്ങൾ). Vessels are things to take, so they have no rate. Add them to an order with "Add item".
+- Sugar and jaggery are not on the printed sheet, so the payasam and pachadi recipes have none. Add them in Settings if needed.
+- **Settings → Food types**: Sadhya (Full) and Sadhya (Mini). Each is a set of dishes.
 - **Settings → Dishes and recipes**: what each dish needs for **100 plates**. The app multiplies it for the order and rounds up to amounts a shop gives (for example 0.25 kg steps, whole coconuts).
 - **Settings → Things to buy**: unit, shop type (Vegetables, Grocery, Dairy…), and a rough rate used only for the cost estimate.
 - **New order**: pick the food type and plates. Untick dishes the customer doesn't want, or add others. The buying list is made at once.

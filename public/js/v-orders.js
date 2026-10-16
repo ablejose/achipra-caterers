@@ -1,7 +1,7 @@
 // Orders list, new/edit order, and one order's screens: To buy, Bills, Money, Dishes.
 import { A, esc, rs, fq, num, ymd, fdate, ftime, dayLabel, fstamp, icon, toast, openSheet, closeSheet, sheetHead, ask, field, compressImage, shareText } from './ui.js';
 import { get, list, put, putMany, removeMany, uid, me, personName, people, settings, queuePhoto, photoSrc } from './store.js';
-import { buildList, orderStats, orderBills, orderPayments, orderLines, lineId, orderValue, clientDue, personMoney, shopCredit, allGroups, UNITS, groupRank } from './calc.js';
+import { buildList, orderStats, orderBills, orderPayments, orderLines, lineId, orderValue, clientDue, personMoney, shopCredit, allGroups, UNITS, groupRank, GROUP_ML, itemOrder } from './calc.js';
 import { pickPerson } from './pick.js';
 import { render } from './app.js';
 
@@ -275,7 +275,7 @@ function listTab(o, st) {
       return `
       <section class="group">
         <div class="group-head">
-          <h3>${esc(g)} <span class="muted">${done}/${gr.length}</span></h3>
+          <h3>${esc(g)}${GROUP_ML[g] ? ` <span class="ml">${GROUP_ML[g]}</span>` : ''} <span class="muted">${done}/${gr.length}</span></h3>
           ${done < gr.length ? `<button class="btn sm" data-act="giveGroup" data-o="${esc(o.id)}" data-g="${esc(g)}">${icon('user')} Give all to…</button>` : ''}
         </div>
         <div class="rows">${gr.map(rowHtml).join('')}</div>
@@ -415,7 +415,7 @@ A.line = (el) => {
 A.addItem = (el) => {
   const o = get('orders', el.dataset.o);
   const rows = buildList(o);
-  const items = list('items').sort((a, b) => a.name.localeCompare(b.name));
+  const items = list('items').sort(itemOrder);
   const s = openSheet(`
     ${sheetHead('Add to buying list')}
     <div class="sheet-body">

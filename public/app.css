@@ -169,6 +169,7 @@ b { font-weight: 600; }
 .group { display: flex; flex-direction: column; gap: .5rem; }
 .group-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .25rem; }
 .group-head h3 .muted { font-weight: 600; font-size: .95rem; }
+.group-head .btn { flex: none; white-space: nowrap; }
 .rows { display: flex; flex-direction: column; }
 .group .rows { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
 

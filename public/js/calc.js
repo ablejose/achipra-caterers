@@ -1,8 +1,11 @@
 // Turning an order (menu + plates) into a buying list, and the money sums.
 import { get, list } from './store.js';
 
-export const GROUPS = ['Vegetables', 'Fruits', 'Coconut & Oil', 'Grocery', 'Dairy', 'Meat & Fish', 'Disposables', 'Gas & Fuel', 'Others'];
+// Same sections as Achipra's printed purchase sheet.
+export const GROUPS = ['Grocery', 'Vegetables', 'Miscellaneous', 'Vessels', 'Others'];
+export const GROUP_ML = { Grocery: 'പലചരക്ക്', Vegetables: 'പച്ചക്കറി', Miscellaneous: 'പലവക', Vessels: 'പാത്രങ്ങൾ' };
 export const UNITS = ['kg', 'g', 'L', 'nos', 'pkt', 'bunch'];
+export const itemOrder = (a, b) => groupRank(a.group) - groupRank(b.group) || (a.sort ?? 9999) - (b.sort ?? 9999) || a.name.localeCompare(b.name);
 export const groupRank = (g) => { const i = GROUPS.indexOf(g); return i === -1 ? GROUPS.length - 1 : i; };
 export const allGroups = () => {
   const extra = new Set(list('items').map((i) => i.group).filter((g) => g && !GROUPS.includes(g)));
@@ -55,7 +58,7 @@ export function buildList(order) {
       bought: !!line?.bought, skip: !!line?.skip, person: line?.person || '', boughtBy: line?.boughtBy || '',
     });
   }
-  rows.sort((a, b) => groupRank(a.item.group) - groupRank(b.item.group) || a.item.name.localeCompare(b.item.name));
+  rows.sort((a, b) => itemOrder(a.item, b.item));
   return rows;
 }
 
