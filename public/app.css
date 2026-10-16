@@ -254,8 +254,35 @@ details.shop > summary > span { flex: 1; display: flex; flex-direction: column; 
 .rank-body { flex: 1; min-width: 0; }
 .rank-top { display: flex; justify-content: space-between; gap: .5rem; }
 .rank .bar { margin: .35rem 0 .2rem; }
-.dish-list { margin: 0; padding-left: 1.2rem; columns: 2; column-gap: 1.5rem; }
-.dish-list li { padding: .15rem 0; break-inside: avoid; }
+/* menu card (order → Dishes) */
+.menu-card { background: var(--bg); border: 1px solid var(--ink); padding: .45rem; }
+.mc-frame { border: 1px solid var(--ink); padding: 2rem 1.25rem 1.75rem; text-align: center; }
+.mc-brand { margin: 0; font-size: .8rem; font-weight: 600; letter-spacing: .28em; text-transform: uppercase; color: var(--ink-2); }
+.mc-title { margin: .7rem 0 .35rem; font-size: 1.9rem; font-weight: 400; letter-spacing: .02em; line-height: 1.15; }
+.mc-for { margin: 0; color: var(--ink-2); font-size: 1rem; line-height: 1.5; }
+.mc-orn { display: flex; align-items: center; justify-content: center; gap: .75rem; margin: 1.4rem auto; max-width: 14rem; font-size: .9rem; color: var(--ink); }
+.mc-orn span { flex: 1; height: 1px; background: var(--ink); }
+.mc-sec + .mc-sec { margin-top: 1.6rem; }
+.mc-cat { display: flex; align-items: center; gap: .8rem; margin: 0 0 .85rem; font-size: .82rem; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; }
+.mc-cat::before, .mc-cat::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.mc-dishes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+.mc-dishes li { display: flex; flex-direction: column; }
+.mc-dish { font-size: 1.15rem; font-weight: 500; }
+.mc-ml { font-size: .92rem; color: var(--muted); margin-top: .05rem; }
+.mc-foot { margin: 0; font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+@media (min-width: 560px) {
+  .mc-frame { padding: 2.5rem 2rem 2rem; }
+  .mc-dishes { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem 1.5rem; }
+  .mc-dishes li:only-child { grid-column: 1 / -1; }
+}
+@media print {
+  @page { margin: 12mm; }
+  body { background: #fff; }
+  .top, .tabbar, .back, .order-head, .tabs, .no-print, .toast, .sheet-wrap { display: none !important; }
+  .view { padding: 0; max-width: none; }
+  .menu-card { border-color: #000; break-inside: avoid; }
+  .mc-dishes { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+}
 
 /* ---------- forms ---------- */
 .form { display: flex; flex-direction: column; gap: 1rem; }

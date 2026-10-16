@@ -655,16 +655,68 @@ export const balanceTag = (bal) => (Math.round(bal) > 0 ? `<span class="tag due"
   : `<span class="tag ok">${icon('check')} Settled</span>`);
 
 // ---------- Dishes ----------
-function dishesTab(o) {
+// Menu sections in the order a guest meets them; "Serving & Kitchen" (leaf, water, gas) is not shown to guests.
+const KITCHEN = 'Serving & Kitchen';
+const CAT_ORDER = ['Main', 'Curry', 'Side', 'Payasam', 'Snacks', 'Drinks'];
+const CAT_TITLE = { Main: 'Main', Curry: 'Curries', Side: 'Sides', Payasam: 'Payasam', Snacks: 'Snacks', Drinks: 'Drinks' };
+const catRank = (c) => { const i = CAT_ORDER.indexOf(c); return i === -1 ? CAT_ORDER.length : i; };
+
+function menuSections(o) {
   const dishes = (o.dishIds || []).map((id) => get('dishes', id)).filter(Boolean);
-  const cats = [...new Set(dishes.map((d) => d.cat || 'Other'))];
-  return `
-    <section class="card pad">
-      <h3>${dishes.length} dishes · ${fq(o.plates)} plates</h3>
-      ${cats.map((c) => `<h4 class="sub">${esc(c)}</h4><ul class="dish-list">${dishes.filter((d) => (d.cat || 'Other') === c).map((d) => `<li>${esc(d.name)}${d.ml ? ` <span class="ml">${esc(d.ml)}</span>` : ''}</li>`).join('')}</ul>`).join('')}
-      <a class="btn block" href="#/order/${esc(o.id)}/edit">${icon('edit')} Change dishes or plates</a>
-    </section>
-    ${o.notes ? `<section class="card pad"><h3>Notes</h3><p class="pre">${esc(o.notes)}</p></section>` : ''}`;
+  const guest = dishes.filter((d) => d.cat !== KITCHEN);
+  const cats = [...new Set(guest.map((d) => d.cat || 'Other'))].sort((a, b) => catRank(a) - catRank(b));
+  return {
+    sections: cats.map((c) => ({ title: CAT_TITLE[c] || c, dishes: guest.filter((d) => (d.cat || 'Other') === c) })),
+    kitchen: dishes.filter((d) => d.cat === KITCHEN),
+    count: guest.length,
+  };
 }
+
+function dishesTab(o) {
+  const { sections, kitchen, count } = menuSections(o);
+  if (!count) {
+    return `<div class="empty"><h2>No dishes yet</h2><p class="muted">Edit the order and tick the dishes.</p>
+      <a class="btn big primary" href="#/order/${esc(o.id)}/edit">Choose dishes</a></div>`;
+  }
+  return `
+    <article class="menu-card" aria-label="Menu">
+      <div class="mc-frame">
+        <p class="mc-brand">${esc(settings().company || 'Achipra Caters')}</p>
+        <h2 class="mc-title">${esc(menuName(o))}</h2>
+        <p class="mc-for">${esc(o.client)}<br>${fdate(o.date, true)}${o.time ? ' · ' + ftime(o.time) : ''}</p>
+        <div class="mc-orn" aria-hidden="true"><span></span>✦<span></span></div>
+        ${sections.map((s) => `
+          <section class="mc-sec">
+            <h3 class="mc-cat">${esc(s.title)}</h3>
+            <ul class="mc-dishes">
+              ${s.dishes.map((d) => `<li><span class="mc-dish">${esc(d.name)}</span>${d.ml ? `<span class="mc-ml">${esc(d.ml)}</span>` : ''}</li>`).join('')}
+            </ul>
+          </section>`).join('')}
+        <div class="mc-orn" aria-hidden="true"><span></span>✦<span></span></div>
+        <p class="mc-foot">${count} dishes · ${fq(o.plates)} plates</p>
+      </div>
+    </article>
+    <div class="list-tools no-print">
+      <button class="btn" data-act="shareMenu" data-o="${esc(o.id)}">${icon('share')} Send menu</button>
+      <button class="btn" data-act="printMenu">${icon('receipt')} Print</button>
+    </div>
+    <a class="btn block no-print" href="#/order/${esc(o.id)}/edit">${icon('edit')} Change dishes or plates</a>
+    ${kitchen.length ? `<p class="hint center no-print">Also arranged: ${kitchen.map((d) => esc(d.name)).join(', ')}</p>` : ''}
+    ${o.notes ? `<section class="card pad no-print"><h3>Notes</h3><p class="pre">${esc(o.notes)}</p></section>` : ''}`;
+}
+
+A.shareMenu = (el) => {
+  const o = get('orders', el.dataset.o);
+  const { sections, count } = menuSections(o);
+  const text = [
+    `*${settings().company || 'Achipra Caters'}*`,
+    `*${menuName(o)}* – ${o.client}`,
+    `${fdate(o.date, true)}${o.time ? ' · ' + ftime(o.time) : ''}`,
+    ...sections.flatMap((s) => ['', `*${s.title}*`, ...s.dishes.map((d) => `• ${d.name}`)]),
+    '', `${count} dishes · ${fq(o.plates)} plates`,
+  ].join('\n');
+  shareText(text);
+};
+A.printMenu = () => window.print();
 
 export { groupRank };
