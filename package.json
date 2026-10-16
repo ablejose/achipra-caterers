@@ -1,0 +1,11 @@
+{
+  "name": "achipra-caters",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Achipra Caters internal tool: orders, buying lists, bills and money.",
+  "type": "module",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --no-warnings server.mjs"
+  }
+}
